@@ -1,0 +1,32 @@
+---
+
+#"{{ git_dirs|default([])|union([item]) }}"
+# The purpose of this playbook is to automatically `git fetch` refs for your Git projects.
+
+- name: FETCH REMOTES FOR YOUR REPOS
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    root_directory: "~"
+
+  tasks:
+
+    - name: LIST ALL DIRECTORIES IN ROOT WITH INDICATOR
+      shell:
+        cmd: 'ls -d */'
+        chdir: "{{ root_directory }}"
+      register: dirs
+
+    - name: LOOP THROUGH LIST OF ITEMS IN ROOT
+      include_tasks: find-git-repos.yml
+      loop: "{{ dirs.stdout_lines }}"
+
+    - name: GIT FETCH FOR REMOTES
+      command:
+        chdir: "{{ root_directory ~ item }}"
+        argv:
+          - git
+          - fetch
+          - "--all"
+      loop: "{{ git_repos }}"

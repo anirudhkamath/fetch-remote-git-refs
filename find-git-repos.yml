@@ -1,0 +1,20 @@
+---
+
+- name: GET LIST OF ALL FILES AND DIRS IN DIRECTORY
+  command:
+    cmd: "ls -al"
+    chdir: "{{ root_directory ~ item }}"
+  register: ls_al
+
+- name: FIND OUT IF REPOSITORY HAS GIT REMOTES
+  command:
+    cmd: "git remote -v"
+    chdir: "{{ root_directory ~ item }}"
+  when: '".git" in ls_al.stdout'
+  register: remotes_list
+
+- name: IF GIT REPO IS INIT IN DIRECTORY, ADD TO LIST
+  set_fact:
+    git_repos: "{{ git_repos|default([])|union([item]) }}"
+  when:
+    - remotes_list.stdout is defined and remotes_list.stdout != ""
